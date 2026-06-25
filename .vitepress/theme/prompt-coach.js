@@ -75,12 +75,19 @@
     succ: '그대로 복사해 바로 쓸 수 있으면 성공.',
   };
 
+  // 가중치 점수제 — 키워드 매칭 "개수"가 가장 많은 도메인을 고른다.
+  // (이전엔 첫 매칭만 골라 "마케팅 코드 짜줘"가 무조건 마케팅이 됐다.)
+  // 동점이면 DOMAINS 앞 순서를 유지(strict > 비교)해 결정론적으로 동작한다.
   function detect(t) {
     var l = (t || '').toLowerCase();
+    var best = null, bestScore = 0;
     for (var i = 0; i < DOMAINS.length; i++) {
-      if (DOMAINS[i].k.some(function (k) { return l.indexOf(k.toLowerCase()) >= 0; })) return DOMAINS[i];
+      var score = DOMAINS[i].k.reduce(function (n, k) {
+        return n + (l.indexOf(k.toLowerCase()) >= 0 ? 1 : 0);
+      }, 0);
+      if (score > bestScore) { bestScore = score; best = DOMAINS[i]; }
     }
-    return FALLBACK;
+    return best || FALLBACK;
   }
 
   // 규칙 기반 자동 완성 — 7블록 골격에 도메인 기본값과 [가정]을 채워 바로 쓸 형태로.
@@ -122,7 +129,8 @@
     html += '</ul>';
     html += '<div class="pc-divider">완성 프롬프트 미리보기 · 규칙 기반 자동 채움</div>';
     html += '<p class="pc-lead">빈칸을 <code>[가정]</code>으로 채워 바로 쓸 수 있게 만들었습니다. 상황에 맞게 고쳐 그대로 복사해 쓰세요.</p>';
-    html += '<textarea class="pc-final" rows="11" readonly></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성 프롬프트 복사</button>';
+    html += '<textarea class="pc-final" rows="11" readonly></textarea>';
+    html += '<div class="pc-final-actions"><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성 프롬프트 복사</button><button type="button" class="pc-btn pc-btn-copy" data-pc-save>⭐ 즐겨찾기 저장</button></div>';
     html += '<div class="pc-divider">더 깊은 첨삭이 필요하면</div>';
     html += '<p class="pc-lead">아래를 Claude/ChatGPT에 붙여넣으면 약점 진단부터 다시 해줍니다.</p>';
     html += '<textarea class="pc-output" rows="8" readonly></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-output">코치 프롬프트 복사</button>';
@@ -135,13 +143,9 @@
     res.style.display = 'block';
   }
 
-  function copy(btn) {
-    var widget = btn.closest('.pc');
-    if (!widget) return;
-    var sel = btn.getAttribute('data-pc-copy') || 'pc-output';
-    var out = widget.querySelector('.' + sel);
+  // 버튼 라벨을 잠깐 "✓ 복사됨"으로 바꿔 복원. textarea(out)의 .value를 복사.
+  function copyText(btn, out) {
     if (!out) return;
-    // 버튼별 원래 라벨을 기억해 복원 (완성/코치 두 버튼이 서로 안 섞이게)
     var orig = btn.getAttribute('data-label');
     if (!orig) { orig = btn.textContent; btn.setAttribute('data-label', orig); }
     var done = function () {
@@ -165,11 +169,150 @@
     fallback();
   }
 
+  function copy(btn) {
+    var widget = btn.closest('.pc');
+    if (!widget) return;
+    var sel = btn.getAttribute('data-pc-copy') || 'pc-output';
+    copyText(btn, widget.querySelector('.' + sel));
+  }
+
+  // ── 즐겨찾기(localStorage) — 코치가 만든 완성 프롬프트를 저장/불러오기 ──
+  // file://에서 localStorage가 막힌 브라우저도 있어 전부 try/catch로 감싼다.
+  var STORE_KEY = 'pc-saved-v1';
+  var STORE_CAP = 50;
+
+  function loadSaved() {
+    try {
+      var v = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function writeSaved(arr) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); return true; }
+    catch (e) { return false; }
+  }
+
+  function saveCurrent(widget) {
+    if (!widget) return;
+    var fin = widget.querySelector('.pc-final');
+    var inp = widget.querySelector('.pc-input');
+    var btn = widget.querySelector('[data-pc-save]');
+    if (!fin || !fin.value.trim()) return;
+    var dm = '';
+    var m = fin.value.match(/감지한 분야:\s*([^\s·]+)/);
+    if (m) dm = m[1];
+    var arr = loadSaved();
+    arr.push({
+      ts: Date.now(),
+      domain: dm,
+      input: ((inp && inp.value) || '').trim().slice(0, 80),
+      prompt: fin.value,
+    });
+    if (arr.length > STORE_CAP) arr = arr.slice(arr.length - STORE_CAP);
+    var ok = writeSaved(arr);
+    if (btn) {
+      var o = btn.getAttribute('data-label') || btn.textContent;
+      btn.setAttribute('data-label', o);
+      btn.textContent = ok ? '✓ 저장됨' : '저장 불가(브라우저)';
+      setTimeout(function () { btn.textContent = o; }, 2000);
+    }
+    renderSavedAll();
+  }
+
+  function removeSaved(ts) {
+    var arr = loadSaved().filter(function (x) { return String(x.ts) !== String(ts); });
+    writeSaved(arr);
+    renderSavedAll();
+  }
+
+  // 저장 목록을 [data-pc-saved] 컨테이너(00_내프롬프트 페이지)에 렌더.
+  // data-pc-sig로 같은 데이터면 다시 안 그려 MutationObserver 루프를 막는다.
+  function renderSavedInto(box) {
+    var items = loadSaved();
+    var sig = items.length + ':' + items.map(function (x) { return x.ts; }).join(',');
+    if (box.getAttribute('data-pc-sig') === sig) return;
+    box.setAttribute('data-pc-sig', sig);
+
+    if (!items.length) {
+      box.innerHTML =
+        '<p class="pc-saved-empty">아직 저장한 프롬프트가 없습니다. ' +
+        '<strong>메타 프롬프트(코치형)</strong> 페이지에서 ⭐ 버튼으로 저장하면 여기 모입니다.</p>';
+      return;
+    }
+
+    box.innerHTML = '';
+    items.slice().reverse().forEach(function (it) {
+      var card = document.createElement('div');
+      card.className = 'pc-saved-card';
+
+      var head = document.createElement('div');
+      head.className = 'pc-saved-head';
+      var title = document.createElement('span');
+      title.className = 'pc-saved-title';
+      // 사용자 값은 textContent로만 (XSS 방지)
+      title.textContent = (it.domain ? '[' + it.domain + '] ' : '') + (it.input || '(제목 없음)');
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'pc-btn pc-btn-copy pc-saved-del';
+      del.setAttribute('data-pc-del', String(it.ts));
+      del.textContent = '삭제';
+      head.appendChild(title);
+      head.appendChild(del);
+
+      var ta = document.createElement('textarea');
+      ta.className = 'pc-final pc-saved-ta';
+      ta.rows = 9;
+      ta.readOnly = true;
+      ta.value = it.prompt; // .value 주입 (XSS 방지)
+
+      var copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'pc-btn pc-btn-copy';
+      copyBtn.setAttribute('data-pc-copy-near', '1');
+      copyBtn.textContent = '복사';
+
+      card.appendChild(head);
+      card.appendChild(ta);
+      card.appendChild(copyBtn);
+      box.appendChild(card);
+    });
+  }
+
+  function renderSavedAll() {
+    var boxes = document.querySelectorAll('[data-pc-saved]');
+    for (var i = 0; i < boxes.length; i++) renderSavedInto(boxes[i]);
+  }
+
   document.addEventListener('click', function (e) {
     if (!e.target || !e.target.closest) return;
     var r = e.target.closest('[data-pc-run]');
     if (r) { var w = r.closest('.pc'); if (w) run(w); return; }
+    var sv = e.target.closest('[data-pc-save]');
+    if (sv) { saveCurrent(sv.closest('.pc')); return; }
+    var del = e.target.closest('[data-pc-del]');
+    if (del) { removeSaved(del.getAttribute('data-pc-del')); return; }
+    var cn = e.target.closest('[data-pc-copy-near]');
+    if (cn) {
+      var card = cn.closest('.pc-saved-card');
+      copyText(cn, card && card.querySelector('textarea'));
+      return;
+    }
     var c = e.target.closest('[data-pc-copy]');
     if (c) { copy(c); }
   });
+
+  // 초기 렌더 + SPA 라우트 변경 대응(MutationObserver). mpa(file://)는 매 페이지
+  // 로드라 DOMContentLoaded로 충분하고, SPA는 새 컨테이너가 붙을 때 다시 그린다.
+  function init() {
+    renderSavedAll();
+    try {
+      new MutationObserver(function () { renderSavedAll(); })
+        .observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
