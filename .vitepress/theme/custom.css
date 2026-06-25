@@ -1,0 +1,622 @@
+/* ============================================================
+   에디토리얼 / Swiss 톤 — 프롬프트 엔지니어링 레퍼런스
+   잡지 같은 위계 · 넉넉한 여백 · 얇은 구분선 · 절제된 1색 액센트
+   ============================================================ */
+
+:root {
+  /* 허브 공용 상단 탭 바 높이만큼 VitePress 네비/본문을 아래로 민다 */
+  --vp-layout-top-height: 36px;
+
+  /* 타이포 */
+  --pe-serif: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+  --pe-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --vp-font-family-base: var(--pe-sans);
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 잉크 & 종이 (라이트 = 기본) */
+  --pe-paper: #faf9f6;
+  --pe-ink: #1a1a17;
+  --pe-ink-soft: #56544d;
+  --pe-rule: #e3e0d8;
+  --pe-accent: #b3361f;       /* 절제된 버밀리언 1색 */
+  --pe-accent-soft: #f4e7e2;
+
+  --vp-c-bg: var(--pe-paper);
+  --vp-c-bg-alt: #f3f1ea;
+  --vp-c-bg-soft: #f3f1ea;
+  --vp-c-text-1: var(--pe-ink);
+  --vp-c-text-2: var(--pe-ink-soft);
+  --vp-c-divider: var(--pe-rule);
+  --vp-c-border: var(--pe-rule);
+
+  --vp-c-brand-1: var(--pe-accent);
+  --vp-c-brand-2: var(--pe-accent);
+  --vp-c-brand-3: var(--pe-accent);
+  --vp-c-brand-soft: var(--pe-accent-soft);
+
+  --vp-layout-max-width: 1400px;
+  --vp-sidebar-width: 300px;
+}
+
+/* 다크 — 자동 기본 아님. 토글 시에도 의도적으로 보이게 톤 조정 */
+.dark {
+  --pe-paper: #15140f;
+  --pe-ink: #ece9e0;
+  --pe-ink-soft: #a6a299;
+  --pe-rule: #2e2c25;
+  --pe-accent: #e0805f;
+  --pe-accent-soft: #2a1c16;
+
+  --vp-c-bg: var(--pe-paper);
+  --vp-c-bg-alt: #1c1a14;
+  --vp-c-bg-soft: #1c1a14;
+}
+
+/* ---------- 타이포 위계: serif 디스플레이 + 큰 대비 ---------- */
+.vp-doc h1 {
+  font-family: var(--pe-serif);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 1.4rem + 3vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.6em;
+}
+
+.vp-doc h2 {
+  font-family: var(--pe-serif);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.1rem);
+  letter-spacing: -0.01em;
+  border-top: 1px solid var(--pe-rule);
+  padding-top: 2.2rem;
+  margin-top: 3rem;
+}
+
+.vp-doc h3 {
+  font-family: var(--pe-sans);
+  font-weight: 650;
+  font-size: 1.18rem;
+  letter-spacing: -0.005em;
+  margin-top: 2.2rem;
+}
+
+.vp-doc p,
+.vp-doc li {
+  font-size: 1.02rem;
+  line-height: 1.78;
+}
+
+/* 본문 폭을 잡지 칼럼처럼 절제 */
+.vp-doc .content-container {
+  max-width: 760px;
+}
+
+/* ---------- 사이드바: 미니멀, 라벨은 대문자 트래킹 ---------- */
+.VPSidebarItem.level-0 > .item > .text {
+  font-family: var(--pe-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pe-ink-soft);
+}
+
+.VPSidebar { padding-top: 2rem; }
+
+/* ---------- 상단 사이트 라벨: Swiss 트래킹 ---------- */
+.VPNavBarTitle .title {
+  font-family: var(--pe-sans);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  font-size: 0.85rem;
+}
+
+.VPNavBar { border-bottom: 1px solid var(--pe-rule); }
+
+/* ---------- 콜아웃: 통일된 노트 카드 (액센트 바 + 옅은 틴트) ---------- */
+.vp-doc blockquote {
+  border: 1px solid var(--pe-rule);
+  border-left: 3px solid var(--pe-accent);
+  border-radius: 0 6px 6px 0;
+  background: var(--pe-accent-soft);
+  padding: 1rem 1.2rem;
+  margin: 1.6rem 0;
+  color: var(--pe-ink-soft);
+  font-style: normal;
+}
+.vp-doc blockquote p { margin: 0; }
+.vp-doc blockquote p + p { margin-top: 0.6rem; }
+.vp-doc blockquote strong { color: var(--pe-ink); }
+
+/* ---------- 코드블록: 종이 위 절제된 카드 + 모노 ---------- */
+.vp-doc div[class*='language-'] {
+  border: 1px solid var(--pe-rule);
+  border-radius: 4px;
+  background: var(--vp-c-bg-alt);
+}
+.dark .vp-doc div[class*='language-'] { background: #100f0b; }
+
+.vp-doc :not(pre) > code {
+  font-size: 0.86em;
+  background: var(--pe-accent-soft);
+  color: var(--pe-accent);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+
+/* ---------- 표: 헤어라인, 헤더는 트래킹 ---------- */
+.vp-doc table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+.vp-doc th {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pe-ink-soft);
+  border-bottom: 1.5px solid var(--pe-ink);
+  background: transparent;
+}
+.vp-doc td { border-bottom: 1px solid var(--pe-rule); }
+.vp-doc tr { background: transparent !important; }
+
+/* ---------- 링크: 잉크색 + 액센트 밑줄 ---------- */
+.vp-doc a {
+  color: var(--pe-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--pe-accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.vp-doc a:hover { color: var(--pe-accent); }
+
+/* ============================================================
+   홈 랜딩 — 커스텀 에디토리얼 (layout: page)
+   매거진 마스트헤드 + 비대칭 벤토 그리드.
+   균일 카드 그리드(기본 VPFeatures)를 의도적으로 버린다.
+   ============================================================ */
+.pe-landing {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(3rem, 2rem + 5vw, 6rem) 24px 6rem;
+}
+
+/* ---------- 마스트헤드 ---------- */
+.pe-masthead {
+  display: grid;
+  gap: 1.4rem;
+  padding-bottom: clamp(2.5rem, 2rem + 3vw, 4rem);
+  margin-bottom: clamp(2.5rem, 2rem + 3vw, 4rem);
+  border-bottom: 1px solid var(--pe-rule);
+}
+.pe-kicker {
+  font-family: var(--pe-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pe-accent);
+  margin: 0;
+}
+.pe-title {
+  font-family: var(--pe-serif);
+  font-weight: 500;
+  font-size: clamp(3rem, 1.4rem + 7vw, 6.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.025em;
+  color: var(--pe-ink);
+  margin: 0;
+}
+.pe-title em {
+  font-style: italic;
+  color: var(--pe-accent);
+}
+.pe-lede {
+  max-width: 50ch;
+  font-family: var(--pe-sans);
+  font-size: clamp(1.02rem, 0.96rem + 0.4vw, 1.2rem);
+  line-height: 1.7;
+  color: var(--pe-ink-soft);
+  margin: 0.4rem 0 0;
+}
+.pe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+.pe-btn {
+  font-family: var(--pe-sans);
+  font-size: 0.9rem;
+  font-weight: 650;
+  padding: 0.7rem 1.3rem;
+  border-radius: 4px;
+  border: 1px solid var(--pe-rule);
+  color: var(--pe-ink);
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.pe-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--pe-accent);
+}
+.pe-btn-primary {
+  background: var(--pe-accent);
+  border-color: var(--pe-accent);
+  color: #fff;
+}
+.dark .pe-btn-primary { color: var(--pe-paper); }
+.pe-btn-primary:hover { background: var(--pe-accent); filter: brightness(1.08); }
+
+/* ---------- 비대칭 벤토 그리드 ---------- */
+.pe-bento {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(150px, auto);
+  gap: 14px;
+}
+.pe-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--pe-rule);
+  border-radius: 6px;
+  background: var(--vp-c-bg-alt);
+  color: var(--pe-ink);
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.2s var(--pe-ease, ease), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.pe-cell:hover {
+  transform: translateY(-3px);
+  border-color: var(--pe-accent);
+  box-shadow: 0 12px 30px -18px rgba(0, 0, 0, 0.5);
+}
+
+/* 키보드 포커스 링 (WCAG 2.4.7/2.4.11).
+   .pe-cell의 overflow:hidden이 outline을 잘라먹으므로 box-shadow 링으로 그린다.
+   안쪽 링은 페이지 배경색이라 어떤 셀 위에서도 '간격'으로 읽힌다. */
+.pe-cell:focus-visible {
+  outline: 2px solid transparent;   /* forced-colors/고대비 모드 대비 */
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px var(--pe-paper),
+    0 0 0 4px var(--pe-accent);
+}
+@media (forced-colors: active) {
+  .pe-cell:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
+}
+.pe-cell-no {
+  font-family: var(--pe-serif);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--pe-accent);
+  letter-spacing: 0.04em;
+}
+.pe-cell h2 {
+  font-family: var(--pe-serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.pe-cell p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--pe-ink-soft);
+  margin: 0;
+}
+.pe-cell-tag {
+  margin-top: auto;
+  font-family: var(--pe-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pe-ink-soft);
+}
+
+/* 리드 셀: 2×2 — 위계의 핵심 */
+.pe-cell-lead {
+  grid-column: span 2;
+  grid-row: span 2;
+  justify-content: flex-start;
+  background:
+    radial-gradient(120% 120% at 100% 0%, var(--pe-accent-soft) 0%, transparent 55%),
+    var(--vp-c-bg-alt);
+}
+.pe-cell-lead .pe-cell-no { font-size: 2.4rem; line-height: 1; }
+.pe-cell-lead h2 {
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.8rem);
+  margin-top: 0.3rem;
+}
+.pe-cell-lead p {
+  font-size: 1rem;
+  max-width: 38ch;
+  margin-top: 0.4rem;
+}
+
+/* 황금률 셀: 링크가 아닌 의미적 인용 — 테마와 무관하게 '다크 패널 + 밝은
+   텍스트' 고정 처리. (테마 토큰을 쓰면 다크모드에서 글자가 사라진다) */
+.pe-cell-quote {
+  grid-column: span 2;
+  margin: 0;
+  background: #16140f;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f3efe6;
+}
+.dark .pe-cell-quote { background: #0c0b08; border-color: rgba(255, 255, 255, 0.08); }
+.pe-cell-quote:hover { transform: none; box-shadow: none; border-color: rgba(255, 255, 255, 0.16); }
+.pe-cell-quote .pe-q-label {
+  font-family: var(--pe-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e0805f;
+}
+.pe-cell-quote p {
+  font-family: var(--pe-serif);
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: #f3efe6;
+}
+
+/* ---------- 본문 블록(시작하기 전 / 쓰는 법) ---------- */
+.pe-prose {
+  max-width: 720px;
+  margin: clamp(4rem, 3rem + 4vw, 6rem) 0 0;
+}
+
+@media (max-width: 760px) {
+  .pe-bento { grid-template-columns: 1fr; }
+  .pe-cell-lead,
+  .pe-cell-quote { grid-column: span 1; grid-row: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pe-cell, .pe-btn { transition: none; }
+  .pe-cell:hover, .pe-btn:hover { transform: none; }
+}
+
+/* ============================================================
+   허브 공용 상단 탭 바 — 생태계 전 사이트와 동일한 시스템 크롬
+   (에디토리얼 본문과 별개의 고정 다크 바. 의도적 일관성)
+   ============================================================ */
+.app-bar-global {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 36px;
+  background: #05050c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 2px;
+  z-index: 9999;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.app-bar-global::-webkit-scrollbar { display: none; }
+.app-bar-global .ab-brand {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-right: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+}
+.app-bar-global .ab-sep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.app-bar-global a {
+  font-size: 11px;
+  font-weight: 500;
+  /* 0.38 → 0.62: 근흑(#05050c) 위에서 AA 통과하도록 비활성 탭 대비 상향 */
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: none;
+  padding: 3px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+}
+.app-bar-global a:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.07);
+}
+.app-bar-global a:focus-visible {
+  outline: 2px solid var(--pe-accent);
+  outline-offset: -1px;
+  color: rgba(255, 255, 255, 0.95);
+}
+.app-bar-global a.ab-active {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- GFM 태스크리스트 체크박스 (config의 인라인 플러그인과 짝) ---------- */
+.vp-doc li.pe-task-item {
+  list-style: none;
+  margin-left: -1.4em;
+  padding-left: 0;
+}
+.vp-doc input.pe-task {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.55em;
+  vertical-align: -0.16em;
+  border: 1.5px solid var(--pe-rule);
+  border-radius: 4px;
+  background: var(--vp-c-bg-alt);
+  position: relative;
+  flex-shrink: 0;
+}
+.vp-doc input.pe-task:checked {
+  border-color: var(--pe-accent);
+  background: var(--pe-accent);
+}
+.vp-doc input.pe-task:checked::after {
+  content: '';
+  position: absolute;
+  left: 0.3em;
+  top: 0.08em;
+  width: 0.28em;
+  height: 0.56em;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ============================================================
+   내부 페이지 에디토리얼 — 큰 serif 섹션 넘버링
+   frontmatter `pageClass: pe-numbered` 가 붙은 페이지(01·03)에만.
+   마크다운 h2의 "1. " 접두는 제거하고 CSS 카운터로 표기한다.
+   ============================================================ */
+.pe-numbered .vp-doc { counter-reset: pe-section; }
+.pe-numbered .vp-doc h2 { counter-increment: pe-section; }
+.pe-numbered .vp-doc h2::before {
+  content: counter(pe-section, decimal-leading-zero);
+  display: block;
+  font-family: var(--pe-serif);
+  font-weight: 500;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--pe-accent);
+  letter-spacing: 0.01em;
+  margin-bottom: 0.35rem;
+}
+
+/* ============================================================
+   코드 카드 — 복사 버튼을 항상 은은하게 노출 (레퍼런스 실사용성)
+   템플릿 골격을 한 번에 복사하도록.
+   ============================================================ */
+.vp-doc div[class*='language-'] { position: relative; }
+
+/* 언어 라벨 — 카드 우하단 태그로. (복사 버튼은 우상단이라 겹치지 않게) */
+.vp-doc div[class*='language-'] .lang {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  top: auto;
+  font-family: var(--pe-sans);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pe-ink-soft);
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+/* VitePress 기본 복사 버튼: 기본은 hover 시에만 보임 → 항상 살짝 보이게 */
+.vp-doc div[class*='language-'] > button.copy {
+  opacity: 0.55;
+  border: 1px solid var(--pe-rule);
+  background-color: var(--vp-c-bg);
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.vp-doc div[class*='language-']:hover > button.copy,
+.vp-doc div[class*='language-'] > button.copy:focus-visible {
+  opacity: 1;
+  border-color: var(--pe-accent);
+}
+
+/* ── 프롬프트 코치 위젯 (.pc) ───────────────────────────────────── */
+.pc {
+  border: 1px solid var(--pe-rule);
+  border-left: 3px solid var(--pe-accent);
+  border-radius: 8px;
+  padding: 1.25rem 1.35rem;
+  background: var(--vp-c-bg-alt);
+  margin: 1.5rem 0;
+}
+.pc-label { display: block; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--pe-ink); }
+.pc-input,
+.pc-output,
+.pc-final {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--pe-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--pe-rule);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  color: var(--pe-ink);
+  resize: vertical;
+}
+.pc-output,
+.pc-final { font-family: var(--vp-font-family-mono, monospace); font-size: 0.82rem; white-space: pre; margin-top: 0.4rem; }
+.pc-final { border-color: var(--pe-accent); background: var(--vp-c-bg-alt); }
+.pc-input:focus,
+.pc-output:focus,
+.pc-final:focus { outline: 2px solid var(--pe-accent); outline-offset: 1px; }
+.pc-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pe-ink-soft);
+  margin: 1.4rem 0 0.6rem;
+}
+.pc-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--pe-rule);
+}
+.pc-lead code { font-size: 0.78rem; }
+.pc-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.6rem; }
+.pc-btn {
+  font-family: var(--pe-sans);
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 6px;
+  border: 1px solid var(--pe-accent);
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.pc-btn:hover { filter: brightness(1.08); }
+.pc-btn-primary { background: var(--pe-accent); color: #fff; }
+.dark .pc-btn-primary { color: var(--pe-paper); }
+.pc-btn-copy { margin-top: 0.5rem; background: transparent; color: var(--pe-accent); }
+.pc-hint { font-size: 0.74rem; color: var(--pe-ink-soft); }
+.pc-result { display: none; margin-top: 1.1rem; }
+.pc-score { display: inline-block; font-size: 0.92rem; padding: 0.25rem 0.7rem; border-radius: 999px; margin-bottom: 0.7rem; }
+.pc-score strong { font-size: 1rem; }
+.pc-good { background: #e7f3ea; color: #1f6b3a; }
+.pc-mid { background: var(--pe-accent-soft); color: var(--pe-accent); }
+.pc-bad { background: #fbe6e3; color: #a3261a; }
+.dark .pc-good { background: #14271b; color: #7bd49b; }
+.dark .pc-bad { background: #2a1413; color: #f0a092; }
+.pc-checks { list-style: none; padding: 0; margin: 0 0 0.9rem; }
+.pc-checks li { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.88rem; border-bottom: 1px solid var(--pe-rule); }
+.pc-mark { font-weight: 700; width: 1rem; }
+.pc-ok .pc-mark { color: #1f6b3a; }
+.pc-miss .pc-mark { color: var(--pe-accent); }
+.pc-key { font-weight: 600; min-width: 4.5rem; }
+.pc-tip { color: var(--pe-ink-soft); }
+.pc-lead { font-size: 0.85rem; color: var(--pe-ink-soft); margin: 0.2rem 0 0.3rem; }
