@@ -21,6 +21,13 @@ const FILE_BASE =
 // 배포 워크플로에서 VP_BASE=/<repo>/ 를 주입하고, 로컬 dev/build는 '/'로 둔다.
 const SITE_BASE = process.env.VP_BASE || '/'
 
+// 공유 카드(Open Graph·Twitter)용 절대 URL. 스크레이퍼(카카오톡·트위터·링크드인)는
+// 상대경로/SVG를 못 읽으므로 배포 도메인을 박아 og.png(1200×630)를 가리킨다.
+const SITE_URL = 'https://harrykys.github.io/prompt-ref/'
+const OG_TITLE = '프롬프트 엔지니어링 · 작업용 레퍼런스'
+const OG_DESC =
+  '골격은 빌려오고 빈칸은 내 맥락으로. Anthropic 공식 가이드를 복붙용으로 정리한 한국어 프롬프트 레퍼런스 — 갤러리 105선·메타 프롬프트 코치 포함.'
+
 // 에디토리얼/Swiss 톤의 프롬프트 엔지니어링 레퍼런스 사이트 설정.
 // 기존 9개 마크다운을 그대로 페이지로 재사용한다.
 export default defineConfig({
@@ -86,6 +93,22 @@ export default defineConfig({
     ],
     // 프롬프트 코치 위젯 로직 (file://에서도 동작하는 인라인 vanilla JS)
     ['script', {}, coachScript],
+
+    // 공유 카드 — Open Graph (카카오톡·페이스북·링크드인)
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: '프롬프트 엔지니어링' }],
+    ['meta', { property: 'og:title', content: OG_TITLE }],
+    ['meta', { property: 'og:description', content: OG_DESC }],
+    ['meta', { property: 'og:url', content: SITE_URL }],
+    ['meta', { property: 'og:image', content: SITE_URL + 'og.png' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:locale', content: 'ko_KR' }],
+    // 공유 카드 — Twitter/X (큰 이미지 카드)
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: OG_TITLE }],
+    ['meta', { name: 'twitter:description', content: OG_DESC }],
+    ['meta', { name: 'twitter:image', content: SITE_URL + 'og.png' }],
   ],
 
   themeConfig: {
@@ -105,7 +128,7 @@ export default defineConfig({
       {
         text: '프롬프트 모음',
         items: [
-          { text: '갤러리 100선', link: '/04_프롬프트갤러리' },
+          { text: '갤러리 105선', link: '/04_프롬프트갤러리' },
           { text: '한글 실무 24선', link: '/05_한글프롬프트' },
           { text: 'Claude 공식 라이브러리', link: '/06_Claude공식라이브러리' },
           { text: '메타 프롬프트 (코치형)', link: '/07_메타프롬프트' },
@@ -128,7 +151,20 @@ export default defineConfig({
           { text: '01 — 핵심 원칙', link: '/01_핵심원칙' },
           { text: '02 — 체크리스트', link: '/02_체크리스트' },
           { text: '03 — 최신 모델 주의점', link: '/03_최신모델_주의점' },
-          { text: '04 — 프롬프트 갤러리 100선', link: '/04_프롬프트갤러리' },
+        ],
+      },
+      {
+        text: '04 — 프롬프트 갤러리 105선',
+        collapsed: false,
+        items: [
+          { text: '전체 카테고리', link: '/04_프롬프트갤러리' },
+          { text: '개발 · 코딩', link: '/gallery/1_개발코딩' },
+          { text: '글쓰기 · 번역 · 교정', link: '/gallery/2_글쓰기번역' },
+          { text: '학습 · 교육', link: '/gallery/3_학습교육' },
+          { text: '비즈니스 · 마케팅 · 생산성', link: '/gallery/4_비즈니스마케팅' },
+          { text: '건강 · 라이프 · 코칭', link: '/gallery/5_건강라이프' },
+          { text: '창작 · 디자인 · 이미지', link: '/gallery/6_창작디자인' },
+          { text: '전문 · 분석 · 도구', link: '/gallery/7_전문분석' },
         ],
       },
       {

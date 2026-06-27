@@ -15,4 +15,21 @@ export default {
       'layout-top': () => h(AppBar),
     })
   },
+  // SPA(https)에서 예시별 연습 패널을 하이드레이션 이후에 주입한다.
+  // head 스크립트(window.__pcInjectPractice)에 로직이 있고, 여기선 "언제" 부를지만 정한다.
+  // 라우트가 바뀔 때마다 .vp-doc 내용이 교체되므로 그때마다 재주입한다.
+  // (file://은 mpa라 이 테마 JS 자체가 없고, head 스크립트가 직접 구동한다.)
+  enhanceApp({ router }) {
+    if (typeof window === 'undefined') return
+    const inject = () =>
+      requestAnimationFrame(() => {
+        const fn = (window as { __pcInjectPractice?: () => void }).__pcInjectPractice
+        if (fn) fn()
+      })
+    const prev = router.onAfterRouteChanged
+    router.onAfterRouteChanged = (to: string) => {
+      if (prev) prev(to)
+      inject()
+    }
+  },
 } satisfies Theme

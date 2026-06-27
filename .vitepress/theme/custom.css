@@ -652,3 +652,47 @@
 .pc-key { font-weight: 600; min-width: 4.5rem; }
 .pc-tip { color: var(--pe-ink-soft); }
 .pc-lead { font-size: 0.85rem; color: var(--pe-ink-soft); margin: 0.2rem 0 0.3rem; }
+
+/* ── 예시별 연습 패널 (.pc-prac) — 예시 코드블록 바로 아래 접기식 ───────── */
+.pc-prac {
+  margin: -0.4rem 0 1.6rem;
+  border: 1px solid var(--pe-rule);
+  border-top: 2px solid var(--pe-accent);
+  border-radius: 0 0 10px 10px;
+  background: var(--vp-c-bg-alt);
+}
+.pc-prac-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--pe-accent);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pc-prac-summary::-webkit-details-marker { display: none; }
+.pc-prac-summary::after { content: '▾'; font-size: 0.8rem; opacity: 0.6; transition: transform 0.2s; }
+.pc-prac[open] > .pc-prac-summary::after { transform: rotate(180deg); }
+.pc-prac-summary:hover { filter: brightness(1.08); }
+.pc-prac-body { padding: 0 0.95rem 0.95rem; }
+.pc-prac-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 5.5rem;
+  padding: 0.6rem 0.7rem;
+  font-family: var(--pe-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  border: 1px solid var(--pe-rule);
+  border-radius: 8px;
+  background: var(--pe-paper);
+  color: var(--pe-ink);
+  resize: vertical;
+  margin-bottom: 0.55rem;
+}
+.pc-prac-input:focus { outline: 2px solid var(--pe-accent); outline-offset: 1px; }
+.pc-prac-result { margin-top: 0.9rem; }
+.pc-prac-result .pc-divider:first-child { margin-top: 0.2rem; }
