@@ -7,8 +7,10 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "build:hub": "VP_FILE=1 vitepress build",
-    "preview": "vitepress preview"
+    "build:web": "VP_SPA=1 vitepress build",
+    "preview": "VP_SPA=1 vitepress preview --outDir .vitepress/dist-web",
+    "test": "node tests/coach.e2e.mjs",
+    "test:build": "VP_SPA=1 vitepress build && node tests/coach.e2e.mjs"
   },
   "devDependencies": {
     "playwright": "^1.61.0",

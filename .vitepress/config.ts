@@ -8,14 +8,23 @@ const coachScript = readFileSync(
   'utf-8',
 )
 
-// VP_FILE=1 → 허브(file://)에서 더블클릭으로 열리는 빌드.
-//   · base를 dist 절대경로로 박아 asset/링크를 루트절대경로로 만들고
+// ⚠️ 기본 `npm run build` = 로컬 더블클릭용 file:// 허브 → **dist/**.
+//   사용자는 dist/index.html을 더블클릭하므로 그게 항상 정상 동작해야 한다.
+//   허브 빌드는:
+//   · base를 dist 절대경로로 박아 asset/링크를 file:// 절대경로로 만들고
 //   · mpa로 SPA 라우터를 꺼서 로컬 fetch(CORS) 문제를 피하고
 //   · cleanUrls를 꺼서 .html 링크가 그대로 파일로 열리게 한다.
-// 기본(npm run dev/build)은 풀기능 SPA — 검색·다크토글 모두 동작.
-const FILE = process.env.VP_FILE === '1'
+//
+// 웹(SPA·검색·다크토글 풀기능)은 VP_SPA=1로 옵트인 → **dist-web/**.
+//   테스트·CI·Pages 배포가 이걸 쓴다. 출력 폴더가 dist/와 갈라져 있어
+//   테스트를 돌려도 사용자가 더블클릭하는 dist/(허브)를 절대 덮어쓰지 않는다.
+//
+// dev/preview는 'build' 명령이 아니라 FILE=false → base '/'로 정상 동작한다.
+const SPA = process.env.VP_SPA === '1'
+const FILE = process.argv.includes('build') && !SPA
 const FILE_BASE =
   '/Users/harry/Desktop/Harry%20Projects/프롬프트-엔지니어링/.vitepress/dist/'
+const WEB_OUT = '.vitepress/dist-web'
 
 // GitHub Pages 프로젝트 사이트는 /<repo>/ 하위 경로로 서빙된다.
 // 배포 워크플로에서 VP_BASE=/<repo>/ 를 주입하고, 로컬 dev/build는 '/'로 둔다.
@@ -36,6 +45,7 @@ export default defineConfig({
   description: 'Anthropic 공식 가이드를 내 맥락으로 채운 작업용 레퍼런스',
   lastUpdated: true,
   base: FILE ? FILE_BASE : SITE_BASE,
+  outDir: FILE ? '.vitepress/dist' : WEB_OUT,
   mpa: FILE,
   cleanUrls: !FILE,
 

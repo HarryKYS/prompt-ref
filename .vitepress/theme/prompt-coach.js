@@ -41,7 +41,7 @@
       req: ['[가정: 언어/스택을 한 줄로 명시]', '입력 검증과 에러 처리 포함', '실행 가능한 완결된 코드 + 사용 예시'],
       cons: '오버엔지니어링 금지. 외부 유료 API 금지.',
       succ: '복사해서 바로 실행되고 [가정: 핵심 케이스]를 통과하면 성공.' },
-    { id: '글쓰기', k: ['글', '에세이', '블로그', '기사', '대본', '소개', '자기소개', '보고서', '후기', '리뷰', '편지', '이메일', '메일'],
+    { id: '글쓰기', k: ['에세이', '블로그', '기사', '대본', '소개', '자기소개', '보고서', '후기', '리뷰', '편지', '이메일', '메일', '문장', '초안'],
       role: '독자를 끝까지 읽게 만드는 전문 작가',
       ctx: '[가정: 일반 독자] 대상, [가정: 블로그] 게시용.',
       req: ['[가정: 800자 내외] 분량', '도입–전개–마무리 구조', '구체적 예시 1개 이상'],
@@ -75,25 +75,52 @@
     succ: '그대로 복사해 바로 쓸 수 있으면 성공.',
   };
 
-  // 가중치 점수제 — 키워드 매칭 "개수"가 가장 많은 도메인을 고른다.
-  // (이전엔 첫 매칭만 골라 "마케팅 코드 짜줘"가 무조건 마케팅이 됐다.)
-  // 동점이면 DOMAINS 앞 순서를 유지(strict > 비교)해 결정론적으로 동작한다.
+  // "할 일"을 가리키는 동사형 키워드 — 주제 명사보다 분야를 더 잘 가른다.
+  // 예: "한글 보고서 글자수 분석"은 명사(보고서)보다 동사(분석)가 진짜 의도다.
+  var VERB_KEYS = ['번역', 'translate', '통역', '분석', '리서치', '조사', '요약',
+    '평가', '검토', '설명', '가르쳐', '구현', '리팩', '디버그'];
+
+  // 가중치 점수제 — 도메인별 매칭 키워드의 가중합이 가장 큰 도메인을 고른다.
+  // 두 가지 함정을 막는다:
+  //  ① 부분문자열 중복 가산 — '메일'⊂'이메일'처럼 한 단어가 두 번 세지는 것 제거
+  //     (같은 도메인에서 더 긴 매칭 키워드에 포함되는 짧은 키워드는 1회만 인정)
+  //  ② 명사 편향 — 동사형(번역/분석/설명…)은 가중치 2로 "할 일"을 우대
+  // 동점이면 DOMAINS 앞 순서를 유지해 결정론적으로 동작한다.
+  // 반환: { d: 도메인, matched: 근거 키워드[], score } — UI가 "왜 이 분야인지" 보여줄 수 있게.
   function detect(t) {
     var l = (t || '').toLowerCase();
-    var best = null, bestScore = 0;
+    var best = FALLBACK, bestScore = 0, bestMatched = [];
     for (var i = 0; i < DOMAINS.length; i++) {
-      var score = DOMAINS[i].k.reduce(function (n, k) {
-        return n + (l.indexOf(k.toLowerCase()) >= 0 ? 1 : 0);
+      var keys = DOMAINS[i].k;
+      var hit = keys.filter(function (k) { return l.indexOf(k.toLowerCase()) >= 0; });
+      // 더 긴 매칭 키워드의 부분문자열인 짧은 키워드는 중복으로 보고 제외
+      var uniq = hit.filter(function (k) {
+        var kl = k.toLowerCase();
+        return !hit.some(function (o) {
+          return o !== k && o.toLowerCase().indexOf(kl) >= 0;
+        });
+      });
+      var score = uniq.reduce(function (n, k) {
+        return n + (VERB_KEYS.indexOf(k) >= 0 ? 2 : 1);
       }, 0);
-      if (score > bestScore) { bestScore = score; best = DOMAINS[i]; }
+      if (score > bestScore) { bestScore = score; best = DOMAINS[i]; bestMatched = uniq; }
     }
-    return best || FALLBACK;
+    return { d: best, matched: bestMatched, score: bestScore };
+  }
+
+  // id로 도메인 객체 찾기 ('일반'은 FALLBACK).
+  function domainById(id) {
+    if (!id || id === FALLBACK.id) return FALLBACK;
+    for (var i = 0; i < DOMAINS.length; i++) if (DOMAINS[i].id === id) return DOMAINS[i];
+    return FALLBACK;
   }
 
   // 규칙 기반 자동 완성 — 7블록 골격에 도메인 기본값과 [가정]을 채워 바로 쓸 형태로.
-  function buildFinal(body) {
+  // forcedId가 오면(사용자가 분야 직접 선택) 감지값 대신 그 분야로 채운다.
+  function buildFinal(body, forcedId) {
     body = body && body.trim() ? body.trim() : '[여기에 무엇을 원하는지 한 줄]';
-    var d = detect(body);
+    var manual = !!forcedId;
+    var d = manual ? domainById(forcedId) : detect(body).d;
     var lines = [];
     lines.push('<role> 너는 ' + d.role + '다.');
     lines.push('<context> ' + d.ctx);
@@ -104,8 +131,48 @@
     lines.push('<success_criteria> ' + d.succ);
     lines.push('<verify> 끝내기 전 success_criteria에 비춰 자기검증 후 완료를 선언한다.');
     lines.push('');
-    lines.push('※ 감지한 분야: ' + d.id + ' · [가정]으로 채운 칸은 네 상황에 맞게 고쳐 써라.');
+    lines.push('※ ' + (manual ? '선택한' : '감지한') + ' 분야: ' + d.id + ' · [가정]으로 채운 칸은 네 상황에 맞게 고쳐 써라.');
     return lines.join('\n');
+  }
+
+  // 감지 근거 블록 — 감지된 분야 + 매칭 키워드(근거 칩) + 분야 직접 선택 드롭다운.
+  // 전부 우리 상수(DOMAINS)에서만 만들어 사용자 텍스트가 HTML로 들어가지 않는다.
+  function detectBlockHtml(info) {
+    var chips = info.matched.length
+      ? info.matched.map(function (k) { return '<span class="pc-chip">' + k + '</span>'; }).join('')
+      : '<span class="pc-chip pc-chip-none">매칭 키워드 없음</span>';
+    var opts = DOMAINS.map(function (dd) {
+      return '<option value="' + dd.id + '"' + (dd.id === info.d.id ? ' selected' : '') + '>' + dd.id + '</option>';
+    }).join('');
+    opts += '<option value="' + FALLBACK.id + '"' + (info.d.id === FALLBACK.id ? ' selected' : '') + '>' + FALLBACK.id + '</option>';
+    return '<div class="pc-detect">' +
+      '<div class="pc-detect-row">' +
+      '<span class="pc-detect-label">감지한 분야</span>' +
+      '<strong class="pc-detect-dom">' + info.d.id + '</strong>' +
+      '<span class="pc-detect-why">← 근거</span>' + chips +
+      '</div>' +
+      '<label class="pc-detect-switch">분야가 다르면 직접 선택 ' +
+      '<select class="pc-domain" data-pc-domain>' + opts + '</select></label>' +
+      '</div>';
+  }
+
+  // Before→After — 내가 쓴 거친 한 줄 vs 완성본이 채워준 요소(✗였던 항목)를 한눈에.
+  // 코치의 교육 효과("뭐가 빠졌고 뭘 채웠는지")를 명시적으로 보여준다.
+  // 원본 텍스트는 HTML이 아니라 .pc-ba-orig에 textContent로만 주입(XSS 방지).
+  function beforeAfterHtml(checks) {
+    var missing = checks.filter(function (c) { return !c.ok; });
+    var after = missing.length
+      ? missing.map(function (c) { return '<li><span class="pc-ba-plus">＋</span>' + c.k + '</li>'; }).join('')
+      : '<li class="pc-ba-allok">5요소가 이미 다 있어요 — 7블록 구조로만 정리했습니다.</li>';
+    return '<div class="pc-ba">' +
+      '<div class="pc-ba-col pc-ba-before">' +
+      '<div class="pc-ba-cap">전 · 내가 쓴 한 줄</div>' +
+      '<div class="pc-ba-orig"></div></div>' +
+      '<div class="pc-ba-arrow">→</div>' +
+      '<div class="pc-ba-col pc-ba-after">' +
+      '<div class="pc-ba-cap">후 · 완성본이 채운 것</div>' +
+      '<ul class="pc-ba-list">' + after + '</ul></div>' +
+      '</div>';
   }
 
   // 5대 요소 체크 — 코치 위젯과 예시별 연습 패널이 공유한다(DRY).
@@ -162,10 +229,14 @@
     var ta = widget.querySelector('.pc-input');
     var t = ((ta && ta.value) || '').trim();
     var checks = scoreChecks(t);
+    var info = detect(t);
 
     var html = scoreHtml(checks);
+    html += '<div class="pc-divider">개선 전 → 후 한눈에</div>';
+    html += beforeAfterHtml(checks);
     html += '<div class="pc-divider">완성 프롬프트 미리보기 · 규칙 기반 자동 채움</div>';
-    html += '<p class="pc-lead">빈칸을 <code>[가정]</code>으로 채워 바로 쓸 수 있게 만들었습니다. 상황에 맞게 고쳐 그대로 복사해 쓰세요.</p>';
+    html += detectBlockHtml(info);
+    html += '<p class="pc-lead">빈칸을 <code>[가정]</code>으로 채웠습니다. 분야가 어긋나면 위에서 직접 고르세요 — 완성본이 바로 바뀝니다.</p>';
     html += '<textarea class="pc-final" rows="11" readonly></textarea>';
     html += '<div class="pc-final-actions"><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성 프롬프트 복사</button><button type="button" class="pc-btn pc-btn-copy" data-pc-save>⭐ 즐겨찾기 저장</button></div>';
     html += '<div class="pc-divider">더 깊은 첨삭이 필요하면</div>';
@@ -174,8 +245,12 @@
 
     var res = widget.querySelector('.pc-result');
     res.innerHTML = html;
-    // 사용자 입력은 innerHTML이 아니라 .value로만 주입 (XSS 방지)
-    res.querySelector('.pc-final').value = buildFinal(t);
+    // 사용자 입력은 innerHTML이 아니라 textContent/.value로만 주입 (XSS 방지)
+    var orig = res.querySelector('.pc-ba-orig');
+    if (orig) orig.textContent = t || '(빈 입력)';
+    var fin = res.querySelector('.pc-final');
+    fin.value = buildFinal(t);
+    fin.setAttribute('data-pc-src', t); // 분야 변경 시 완성본 재생성용 원문
     res.querySelector('.pc-output').value = buildCoach(t);
     res.style.display = 'block';
   }
@@ -201,8 +276,13 @@
     var codeEl = codeWrap && codeWrap.querySelector ? codeWrap.querySelector('pre code') : null;
     var exampleText = codeEl ? codeEl.innerText : '';
 
-    var html = scoreHtml(scoreChecks(t));
+    var checks = scoreChecks(t);
+    var info = detect(t);
+    var html = scoreHtml(checks);
+    html += '<div class="pc-divider">개선 전 → 후 한눈에</div>';
+    html += beforeAfterHtml(checks);
     html += '<div class="pc-divider">규칙 기반 완성본 · 빈칸 [가정] 자동 채움</div>';
+    html += detectBlockHtml(info);
     html += '<textarea class="pc-final" rows="10" readonly></textarea>';
     html += '<div class="pc-final-actions"><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성본 복사</button><button type="button" class="pc-btn pc-btn-copy" data-pc-save>⭐ 즐겨찾기 저장</button></div>';
     html += '<div class="pc-divider">예시와 비교해 Claude에게 제대로 리뷰받기</div>';
@@ -210,7 +290,11 @@
     html += '<textarea class="pc-review" rows="8" readonly></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-review">리뷰 프롬프트 복사</button>';
 
     res.innerHTML = html;
-    res.querySelector('.pc-final').value = buildFinal(t);
+    var origP = res.querySelector('.pc-ba-orig');
+    if (origP) origP.textContent = t || '(빈 입력)';
+    var finP = res.querySelector('.pc-final');
+    finP.value = buildFinal(t);
+    finP.setAttribute('data-pc-src', t);
     res.querySelector('.pc-review').value = buildReview(t, exampleText);
     res.style.display = 'block';
   }
@@ -345,7 +429,7 @@
     var btn = widget.querySelector('[data-pc-save]');
     if (!fin || !fin.value.trim()) return;
     var dm = '';
-    var m = fin.value.match(/감지한 분야:\s*([^\s·]+)/);
+    var m = fin.value.match(/(?:감지한|선택한) 분야:\s*([^\s·]+)/);
     if (m) dm = m[1];
     var arr = loadSaved();
     arr.push({
@@ -436,6 +520,25 @@
   var USE_COPY_FALLBACK =
     location.protocol === 'file:' ||
     !(navigator.clipboard && navigator.clipboard.writeText);
+
+  // 분야 직접 선택 시 완성본을 그 분야로 즉시 재생성 + 배지 갱신.
+  // 코치(.pc)와 예시 연습(.pc-prac) 양쪽에서 동작한다.
+  function onDomainChange(sel) {
+    var widget = sel.closest('.pc') || sel.closest('.pc-prac');
+    if (!widget) return;
+    var fin = widget.querySelector('.pc-final');
+    if (!fin) return;
+    var src = fin.getAttribute('data-pc-src') || '';
+    fin.value = buildFinal(src, sel.value);
+    var dom = widget.querySelector('.pc-detect-dom');
+    if (dom) dom.textContent = sel.value;
+  }
+
+  document.addEventListener('change', function (e) {
+    if (!e.target || !e.target.closest) return;
+    var sel = e.target.closest('[data-pc-domain]');
+    if (sel) onDomainChange(sel);
+  });
 
   document.addEventListener('click', function (e) {
     if (!e.target || !e.target.closest) return;

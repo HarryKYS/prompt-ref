@@ -16,7 +16,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 코치 위젯 회귀 테스트 — SPA 웹빌드(dist-web/, base '/')를 실제 브라우저로 검증한다.
+  # (기본 build는 file:// 허브라 HTTP 테스트엔 안 맞다 → VP_SPA=1 웹빌드를 쓴다)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Build web (SPA) for testing
+        run: npm run build:web
+      - name: Run coach widget regression tests
+        run: npm test
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,14 +45,15 @@ jobs:
           cache: npm
       - uses: actions/configure-pages@v5
       - run: npm ci
-      - name: Build with VitePress
-        # 프로젝트 사이트는 /<repo>/ 하위 경로 → base를 레포명으로 주입
+      - name: Build with VitePress (SPA + Pages base)
+        # 프로젝트 사이트는 /<repo>/ 하위 경로 → base를 레포명으로 주입. VP_SPA=1 → dist-web/
         env:
+          VP_SPA: '1'
           VP_BASE: /${{ github.event.repository.name }}/
-        run: npm run build
+        run: vitepress build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .vitepress/dist
+          path: .vitepress/dist-web
 
   deploy:
     needs: build
