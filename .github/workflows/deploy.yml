@@ -46,11 +46,11 @@ jobs:
       - uses: actions/configure-pages@v5
       - run: npm ci
       - name: Build with VitePress (SPA + Pages base)
-        # 프로젝트 사이트는 /<repo>/ 하위 경로 → base를 레포명으로 주입. VP_SPA=1 → dist-web/
+        # 프로젝트 사이트는 /<repo>/ 하위 경로 → base를 레포명으로 주입.
+        # build:web이 VP_SPA=1을 설정 → dist-web/. npm 스크립트로 돌려야 node_modules/.bin이 PATH에 잡힌다.
         env:
-          VP_SPA: '1'
           VP_BASE: /${{ github.event.repository.name }}/
-        run: vitepress build
+        run: npm run build:web
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .vitepress/dist-web
