@@ -115,19 +115,29 @@
     return FALLBACK;
   }
 
+  // 빌드 요청("~만들어줘/구현해줘") 감지 키워드 — scoreChecks(추가 채점)와
+  // buildFinal(완성본에 범위·데이터 블록 주입)이 공유한다. 채점 기준과 완성본이 어긋나지 않게.
+  var BUILD_KEYS = ['만들', '개발', '구현', '클론', '짜줘', '앱', '웹', '사이트', '프로그램', '봇', '대시보드'];
+
   // 규칙 기반 자동 완성 — 7블록 골격에 도메인 기본값과 [가정]을 채워 바로 쓸 형태로.
   // forcedId가 오면(사용자가 분야 직접 선택) 감지값 대신 그 분야로 채운다.
   function buildFinal(body, forcedId) {
     body = body && body.trim() ? body.trim() : '[여기에 무엇을 원하는지 한 줄]';
     var manual = !!forcedId;
     var d = manual ? domainById(forcedId) : detect(body).d;
+    var isBuild = has(body, BUILD_KEYS);
     var lines = [];
     lines.push('<role> 너는 ' + d.role + '다.');
     lines.push('<context> ' + d.ctx);
     lines.push('<task> ' + body + ' — 위 맥락에 맞게 끝까지 완성한다.');
     lines.push('<requirements>');
     d.req.forEach(function (r, i) { lines.push('  ' + (i + 1) + '. ' + r); });
-    lines.push('<constraints> ' + d.cons + ' 오버엔지니어링 금지.');
+    if (isBuild) {
+      // 채점에서 범위·데이터를 ✗로 짚었다면 완성본이 그 구멍을 직접 메워야 한다.
+      lines.push('  ' + (d.req.length + 1) + '. 범위(수직 슬라이스): [가정: 핵심 기능 1개만 이번 판 — 나머지는 비목표로 명시]');
+      lines.push('  ' + (d.req.length + 2) + '. 데이터 출처: [가정: 무료 공개 API 1개 → 실패 시 로컬 목데이터 폴백]');
+    }
+    lines.push('<constraints> ' + d.cons + (isBuild ? ' 유료 API 금지.' : '') + ' 오버엔지니어링 금지.');
     lines.push('<success_criteria> ' + d.succ);
     lines.push('<verify> 끝내기 전 success_criteria에 비춰 자기검증 후 완료를 선언한다.');
     lines.push('');
@@ -176,10 +186,8 @@
   }
 
   // 5대 요소 체크 — 코치 위젯과 예시별 연습 패널이 공유한다(DRY).
-  // 빌드 요청("~만들어줘/구현해줘")이 감지되면 큰 요청의 진짜 결함인
+  // 빌드 요청(BUILD_KEYS 감지)이면 큰 요청의 진짜 결함인
   // 범위(MVP)·데이터 출처 2개를 추가로 검사한다. (표면 요소만으론 못 잡는 구멍)
-  var BUILD_KEYS = ['만들', '개발', '구현', '클론', '짜줘', '앱', '웹', '사이트', '프로그램', '봇', '대시보드'];
-
   function scoreChecks(t) {
     var words = t ? t.split(/\s+/).filter(Boolean).length : 0;
     var checks = [

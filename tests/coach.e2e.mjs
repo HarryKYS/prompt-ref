@@ -151,11 +151,18 @@ async function main() {
   check('빌드 요청 시 범위(MVP) 체크 존재', buildKeys.includes('범위(MVP)'));
   check('빌드 요청 시 데이터 출처 체크 존재', buildKeys.includes('데이터 출처'));
 
-  // ── 비빌드 요청은 기존 그대로 5요소 ──
+  // ── 빌드 요청이면 완성본에도 범위·데이터·유료금지 블록이 채워져야 한다(채점↔완성본 일치) ──
+  const buildFinalText = await page.inputValue('.pc-final');
+  check('빌드 완성본에 범위(수직 슬라이스) 포함', buildFinalText.includes('범위(수직 슬라이스)'));
+  check('빌드 완성본에 데이터 출처 포함', buildFinalText.includes('데이터 출처'));
+  check('빌드 완성본에 유료 API 금지 포함', buildFinalText.includes('유료 API 금지'));
+
+  // ── 비빌드 요청은 기존 그대로 5요소 + 완성본에 빌드 블록 없음 ──
   await page.fill('#pc-input', '이 문서 요약해줘');
   await page.click('[data-pc-run]');
   await page.waitForTimeout(150);
   check('일반 요청 시 총점 /5 유지', (await page.textContent('.pc-score')).includes('/5'));
+  check('일반 완성본엔 데이터 출처 없음', !(await page.inputValue('.pc-final')).includes('데이터 출처'));
 
   // ── 5요소 모두 갖춘 입력 → allok ──
   await page.fill('#pc-input', '너는 시니어 마케터다. 사회초년생 대상 인스타 광고 카피를 15자 이내 불릿 3개로, 3초 안에 이해되면 성공.');
