@@ -109,6 +109,8 @@ async function main() {
     ['마케팅 자동화 코드 짜줘', '개발'],
     ['이메일 자동 분류 프로그램', '개발'],   // 회귀: 부분문자열 중복 가산 버그
     ['한글 보고서 글자수 분석', '분석'],      // 회귀: '글' 과탐 + 동사 가중치
+    ['트레이딩뷰를 만들고 싶다', '개발'],     // 회귀: "만들어줘"류 빌드 요청이 일반으로 새던 버그
+    ['주식 차트 웹사이트 만들어줘', '개발'],
   ];
   for (const [input, expected] of detectCases) {
     await page.fill('#pc-input', input);
@@ -138,6 +140,22 @@ async function main() {
   check('수동선택 후 배지=글쓰기', (await page.textContent('.pc-detect-dom')).trim() === '글쓰기');
   check('완성본 "선택한 분야: 글쓰기"', final2.includes('선택한 분야: 글쓰기'));
   check('완성본 role이 작가로 전환', final2.includes('전문 작가'));
+
+  // ── 빌드 요청 감지 → 범위(MVP)·데이터 출처 체크 추가(총점 /7) ──
+  await page.fill('#pc-input', '트레이딩뷰 클론 만들어줘');
+  await page.click('[data-pc-run]');
+  await page.waitForTimeout(150);
+  const buildScore = await page.textContent('.pc-score');
+  const buildKeys = await page.$$eval('.pc-checks .pc-key', (els) => els.map((e) => e.textContent));
+  check('빌드 요청 시 총점 /7', buildScore.includes('/7'));
+  check('빌드 요청 시 범위(MVP) 체크 존재', buildKeys.includes('범위(MVP)'));
+  check('빌드 요청 시 데이터 출처 체크 존재', buildKeys.includes('데이터 출처'));
+
+  // ── 비빌드 요청은 기존 그대로 5요소 ──
+  await page.fill('#pc-input', '이 문서 요약해줘');
+  await page.click('[data-pc-run]');
+  await page.waitForTimeout(150);
+  check('일반 요청 시 총점 /5 유지', (await page.textContent('.pc-score')).includes('/5'));
 
   // ── 5요소 모두 갖춘 입력 → allok ──
   await page.fill('#pc-input', '너는 시니어 마케터다. 사회초년생 대상 인스타 광고 카피를 15자 이내 불릿 3개로, 3초 안에 이해되면 성공.');

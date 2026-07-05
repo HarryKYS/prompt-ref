@@ -35,7 +35,7 @@
       req: ['타깃의 불편을 한 줄로 짚고 → 해결 → CTA 순서', '[가정: 장당 15자 이내], 친근한 톤', '같은 톤의 대안 버전 1세트 추가'],
       cons: '과장·근거 없는 수치 금지.',
       succ: '첫 문장만 봐도 누구를 위한 것인지 [가정: 3초] 내 이해되면 성공.' },
-    { id: '개발', k: ['코드', '함수', '버그', '구현', '리팩', 'api', '컴포넌트', '프로그램', '앱', '파이썬', '자바', '리액트', 'sql', '자동화', '스크립트', '알고리즘'],
+    { id: '개발', k: ['코드', '함수', '버그', '구현', '리팩', 'api', '컴포넌트', '프로그램', '앱', '파이썬', '자바', '리액트', 'sql', '자동화', '스크립트', '알고리즘', '만들', '개발', '웹', '사이트', '클론', '차트', '대시보드', '서비스', '크롤', '봇'],
       role: '프로덕션 코드를 책임지는 시니어 엔지니어',
       ctx: '[가정: 개인 프로젝트]에서 쓸 기능. 유지보수와 가독성이 중요하다.',
       req: ['[가정: 언어/스택을 한 줄로 명시]', '입력 검증과 에러 처리 포함', '실행 가능한 완결된 코드 + 사용 예시'],
@@ -163,7 +163,7 @@
     var missing = checks.filter(function (c) { return !c.ok; });
     var after = missing.length
       ? missing.map(function (c) { return '<li><span class="pc-ba-plus">＋</span>' + c.k + '</li>'; }).join('')
-      : '<li class="pc-ba-allok">5요소가 이미 다 있어요 — 7블록 구조로만 정리했습니다.</li>';
+      : '<li class="pc-ba-allok">필수 요소가 이미 다 있어요 — 7블록 구조로만 정리했습니다.</li>';
     return '<div class="pc-ba">' +
       '<div class="pc-ba-col pc-ba-before">' +
       '<div class="pc-ba-cap">전 · 내가 쓴 한 줄</div>' +
@@ -176,21 +176,34 @@
   }
 
   // 5대 요소 체크 — 코치 위젯과 예시별 연습 패널이 공유한다(DRY).
+  // 빌드 요청("~만들어줘/구현해줘")이 감지되면 큰 요청의 진짜 결함인
+  // 범위(MVP)·데이터 출처 2개를 추가로 검사한다. (표면 요소만으론 못 잡는 구멍)
+  var BUILD_KEYS = ['만들', '개발', '구현', '클론', '짜줘', '앱', '웹', '사이트', '프로그램', '봇', '대시보드'];
+
   function scoreChecks(t) {
     var words = t ? t.split(/\s+/).filter(Boolean).length : 0;
-    return [
+    var checks = [
       { k: '역할', ok: has(t, ['너는', '당신은', '역할', '전문가', 'act as', 'you are', 'assistant']), tip: '역할을 지정하면 톤·전문성이 잡힌다. 예: "너는 시니어 마케터다."' },
       { k: '맥락·이유', ok: has(t, ['왜', '때문', '위해', '목적', '용도', '어디', '대상', '독자', '상황', 'context', 'because']), tip: '왜/어디에 쓰는지 주면 모델이 일반화한다. 예: "사회초년생 대상 인스타 광고용."' },
       { k: '성공 기준', ok: has(t, ['성공', '기준', '되면', '조건', '검증', '목표', '평가', '이내', '개수', '글자', '단어']), tip: '"이게 되면 성공"을 검증 가능하게. 예: "3초 안에 이해되면 성공 / 15자 이내."' },
       { k: '출력 형식', ok: has(t, ['형식', '표', 'json', '불릿', '목록', '리스트', '줄', '단계', '코드', 'format', 'markdown']), tip: '원하는 형식을 지정. 예: "표로 / 불릿 5개 / JSON으로."' },
       { k: '구체성', ok: words >= 6 && t.length >= 15, tip: '너무 짧고 모호하다. 무엇을·어떻게·어떤 제약인지 한 문장이라도 더.' },
     ];
+    if (has(t, BUILD_KEYS)) {
+      checks.push(
+        { k: '범위(MVP)', ok: has(t, ['범위', 'mvp', '단계', '제외', '비목표', '최소', '슬라이스', '핵심 기능', '1개', '하나만', '먼저']), tip: '큰 요청은 이번 판 범위를 못 박아라. 예: "심볼 1개, 캔들차트만 — 실시간·그리기 도구는 제외."' },
+        { k: '데이터 출처', ok: has(t, ['데이터', 'api', '목데이터', 'mock', 'json', 'csv', '무료', '출처', '더미', '로컬', 'db']), tip: '데이터를 어디서 가져올지 명시. 예: "무료 공개 API, 실패 시 로컬 목데이터 폴백." (유료 API 금지도 함께)' }
+      );
+    }
+    return checks;
   }
 
   function scoreHtml(checks) {
     var score = checks.filter(function (c) { return c.ok; }).length;
-    var grade = score >= 5 ? { l: '탄탄함', t: 'good' } : score >= 3 ? { l: '보통 — 보강 추천', t: 'mid' } : { l: '약함 — 코치 필수', t: 'bad' };
-    var html = '<div class="pc-score pc-' + grade.t + '"><strong>' + score + '/5</strong> · ' + grade.l + '</div><ul class="pc-checks">';
+    // 총점은 동적 — 빌드 요청이면 7개, 아니면 5개. 등급 경계는 비율로 환산(5개 기준과 동일).
+    var total = checks.length;
+    var grade = score === total ? { l: '탄탄함', t: 'good' } : score >= Math.ceil(total * 0.6) ? { l: '보통 — 보강 추천', t: 'mid' } : { l: '약함 — 코치 필수', t: 'bad' };
+    var html = '<div class="pc-score pc-' + grade.t + '"><strong>' + score + '/' + total + '</strong> · ' + grade.l + '</div><ul class="pc-checks">';
     checks.forEach(function (c) {
       html += '<li class="' + (c.ok ? 'pc-ok' : 'pc-miss') + '"><span class="pc-mark">' + (c.ok ? '✓' : '✗') + '</span><span class="pc-key">' + c.k + '</span>' + (c.ok ? '' : '<span class="pc-tip">' + c.tip + '</span>') + '</li>';
     });
@@ -237,11 +250,11 @@
     html += '<div class="pc-divider">완성 프롬프트 미리보기 · 규칙 기반 자동 채움</div>';
     html += detectBlockHtml(info);
     html += '<p class="pc-lead">빈칸을 <code>[가정]</code>으로 채웠습니다. 분야가 어긋나면 위에서 직접 고르세요 — 완성본이 바로 바뀝니다.</p>';
-    html += '<textarea class="pc-final" rows="11" readonly></textarea>';
+    html += '<textarea class="pc-final" rows="11" readonly aria-label="규칙 기반 완성 프롬프트"></textarea>';
     html += '<div class="pc-final-actions"><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성 프롬프트 복사</button><button type="button" class="pc-btn pc-btn-copy" data-pc-save>⭐ 즐겨찾기 저장</button></div>';
     html += '<div class="pc-divider">더 깊은 첨삭이 필요하면</div>';
     html += '<p class="pc-lead">아래를 Claude/ChatGPT에 붙여넣으면 약점 진단부터 다시 해줍니다.</p>';
-    html += '<textarea class="pc-output" rows="8" readonly></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-output">코치 프롬프트 복사</button>';
+    html += '<textarea class="pc-output" rows="8" readonly aria-label="Claude에게 붙여넣을 코치 프롬프트"></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-output">코치 프롬프트 복사</button>';
 
     var res = widget.querySelector('.pc-result');
     res.innerHTML = html;
@@ -283,11 +296,11 @@
     html += beforeAfterHtml(checks);
     html += '<div class="pc-divider">규칙 기반 완성본 · 빈칸 [가정] 자동 채움</div>';
     html += detectBlockHtml(info);
-    html += '<textarea class="pc-final" rows="10" readonly></textarea>';
+    html += '<textarea class="pc-final" rows="10" readonly aria-label="규칙 기반 완성 프롬프트"></textarea>';
     html += '<div class="pc-final-actions"><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-final">완성본 복사</button><button type="button" class="pc-btn pc-btn-copy" data-pc-save>⭐ 즐겨찾기 저장</button></div>';
     html += '<div class="pc-divider">예시와 비교해 Claude에게 제대로 리뷰받기</div>';
     html += '<p class="pc-lead">아래를 복사해 Claude/ChatGPT에 붙여넣으면 <b>위 예시 기준</b>으로 내 것을 채점·교정해줍니다.</p>';
-    html += '<textarea class="pc-review" rows="8" readonly></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-review">리뷰 프롬프트 복사</button>';
+    html += '<textarea class="pc-review" rows="8" readonly aria-label="예시 대비 리뷰 프롬프트"></textarea><button type="button" class="pc-btn pc-btn-copy" data-pc-copy="pc-review">리뷰 프롬프트 복사</button>';
 
     res.innerHTML = html;
     var origP = res.querySelector('.pc-ba-orig');
@@ -324,9 +337,10 @@
       var body = document.createElement('div');
       body.className = 'pc-prac-body';
       body.innerHTML =
-        '<textarea class="pc-prac-input" rows="4" placeholder="위 예시를 참고해 내 상황으로 다시 써보세요. ([대괄호]를 내 내용으로 바꾸면 시작이 쉬워요)"></textarea>' +
+        '<textarea class="pc-prac-input" rows="4" aria-label="내 프롬프트 연습 입력" placeholder="위 예시를 참고해 내 상황으로 다시 써보세요. ([대괄호]를 내 내용으로 바꾸면 시작이 쉬워요)"></textarea>' +
         '<button type="button" class="pc-btn pc-btn-primary" data-pc-prac-run>리뷰 받기 →</button>' +
-        '<div class="pc-prac-result" style="display:none"></div>';
+        // aria-live: 결과가 갈리는 영역 — 스크린리더에 채점 결과를 알린다
+        '<div class="pc-prac-result" style="display:none" aria-live="polite"></div>';
       det.appendChild(sum);
       det.appendChild(body);
       if (b.parentNode) b.parentNode.insertBefore(det, b.nextSibling);
@@ -538,6 +552,24 @@
     if (!e.target || !e.target.closest) return;
     var sel = e.target.closest('[data-pc-domain]');
     if (sel) onDomainChange(sel);
+  });
+
+  // ⌘/Ctrl+Enter = 진단 실행 — 마우스 없이 입력→실행이 이어지게.
+  document.addEventListener('keydown', function (e) {
+    if (!(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+    if (!e.target || !e.target.closest) return;
+    var inp = e.target.closest('.pc-input');
+    if (inp) {
+      var w = inp.closest('.pc');
+      if (w) { e.preventDefault(); run(w); }
+      return;
+    }
+    var pinp = e.target.closest('.pc-prac-input');
+    if (pinp) {
+      var det = pinp.closest('.pc-prac');
+      var btn = det && det.querySelector('[data-pc-prac-run]');
+      if (btn) { e.preventDefault(); runPractice(btn); }
+    }
   });
 
   document.addEventListener('click', function (e) {
