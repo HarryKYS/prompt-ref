@@ -156,6 +156,9 @@ async function main() {
   check('빌드 완성본에 범위(수직 슬라이스) 포함', buildFinalText.includes('범위(수직 슬라이스)'));
   check('빌드 완성본에 데이터 출처 포함', buildFinalText.includes('데이터 출처'));
   check('빌드 완성본에 유료 API 금지 포함', buildFinalText.includes('유료 API 금지'));
+  // 회귀: 개발 도메인 cons에 이미 있는 문구가 이중으로 붙던 버그(라이브 실사용에서 발견)
+  check('완성본 constraints "유료 API 금지" 1회만', buildFinalText.split('유료 API 금지').length === 2);
+  check('완성본 constraints "오버엔지니어링 금지" 1회만', buildFinalText.split('오버엔지니어링 금지').length === 2);
 
   // ── 비빌드 요청은 기존 그대로 5요소 + 완성본에 빌드 블록 없음 ──
   await page.fill('#pc-input', '이 문서 요약해줘');

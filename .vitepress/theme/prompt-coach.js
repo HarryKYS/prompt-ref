@@ -137,7 +137,11 @@
       lines.push('  ' + (d.req.length + 1) + '. 범위(수직 슬라이스): [가정: 핵심 기능 1개만 이번 판 — 나머지는 비목표로 명시]');
       lines.push('  ' + (d.req.length + 2) + '. 데이터 출처: [가정: 무료 공개 API 1개 → 실패 시 로컬 목데이터 폴백]');
     }
-    lines.push('<constraints> ' + d.cons + (isBuild ? ' 유료 API 금지.' : '') + ' 오버엔지니어링 금지.');
+    // 도메인 cons에 이미 있는 문구는 다시 붙이지 않는다(개발 도메인 중복 방지 — 라이브 실사용에서 발견).
+    var cons = [d.cons];
+    if (isBuild && d.cons.indexOf('유료 API 금지') < 0) cons.push('유료 API 금지.');
+    if (d.cons.indexOf('오버엔지니어링 금지') < 0) cons.push('오버엔지니어링 금지.');
+    lines.push('<constraints> ' + cons.join(' '));
     lines.push('<success_criteria> ' + d.succ);
     lines.push('<verify> 끝내기 전 success_criteria에 비춰 자기검증 후 완료를 선언한다.');
     lines.push('');
