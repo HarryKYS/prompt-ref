@@ -197,6 +197,7 @@ export default defineConfig({
         text: '예시 (내 맥락으로 채움)',
         items: [
           { text: '주식 차트 만들기', link: '/examples/주식차트_만들기' },
+          { text: '부동산 대시보드', link: '/examples/부동산_대시보드' },
           { text: '내 맥락으로 채운 예시', link: '/examples/내맥락으로_채운예시' },
         ],
       },
