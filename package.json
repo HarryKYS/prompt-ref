@@ -9,8 +9,9 @@
     "build": "vitepress build",
     "build:web": "VP_SPA=1 vitepress build",
     "preview": "VP_SPA=1 vitepress preview --outDir .vitepress/dist-web",
-    "test": "node tests/coach.e2e.mjs",
-    "test:build": "VP_SPA=1 vitepress build && node tests/coach.e2e.mjs"
+    "test": "node tests/counts.mjs && node tests/coach.e2e.mjs",
+    "test:build": "VP_SPA=1 vitepress build && node tests/coach.e2e.mjs",
+    "test:counts": "node tests/counts.mjs"
   },
   "devDependencies": {
     "playwright": "^1.61.0",
