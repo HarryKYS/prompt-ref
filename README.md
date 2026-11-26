@@ -26,7 +26,7 @@
 |------|------|
 | [01_핵심원칙.md](01_핵심원칙.md) | 전 모델 공통 핵심 기법 10가지 (한국어 압축) |
 | [02_체크리스트.md](02_체크리스트.md) | 프롬프트 작성 전/후 점검 리스트 |
-| [03_최신모델_주의점.md](03_최신모델_주의점.md) | Opus 4.x / Fable 5에서 달라진 점 (과잉행동·thinking·prefill 폐지) |
+| [03_최신모델_주의점.md](03_최신모델_주의점.md) | Opus 5.5 / Sonnet 5.5 / Haiku 5.5 / Fable 5.1에서 달라진 점 (모델별 thinking 기본값·끄는 법·content[0] 함정·강제 tool_choice·budget_tokens·temperature 제거·prefill 폐지) |
 | [templates/](templates/) | 빈칸 채우는 재사용 템플릿 (작업지시·문서분석·리서치·자기검증) |
 | [examples/](examples/) | 내 실제 프로젝트 맥락으로 채운 예시 (영상·마켓브리핑) |
 

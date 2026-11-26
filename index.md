@@ -23,7 +23,7 @@ aside: false
     <a class="pe-cell pe-cell-lead" href="./00_내프롬프트.html">
       <span class="pe-cell-no" aria-hidden="true">★</span>
       <h2>내 프롬프트</h2>
-      <p>매일 손이 가는 12개만 모은 단축 페이지. 요약·코드리뷰·디버깅·PRD·번역·레드팀 — 복사 버튼으로 바로 가져다 쓴다.</p>
+      <p>매일 손이 가는 13개만 모은 단축 페이지. 요약·코드리뷰·디버깅·PRD·번역·레드팀 — 복사 버튼으로 바로 가져다 쓴다.</p>
       <span class="pe-cell-tag">즐겨찾기 · 복붙용</span>
     </a>
     <a class="pe-cell" href="./01_핵심원칙.html">
@@ -41,8 +41,8 @@ aside: false
     <a class="pe-cell" href="./03_최신모델_주의점.html">
       <span class="pe-cell-no" aria-hidden="true">03</span>
       <h2>최신 모델 주의점</h2>
-      <p>Opus 4.x · Fable 5의 과잉행동·adaptive thinking·prefill 폐지.</p>
-      <span class="pe-cell-tag">Opus 4.x · Fable 5</span>
+      <p>5.5 세대의 thinking 기본 ON 함정(content[0]·max_tokens), 강제 tool_choice·budget_tokens·temperature 제거, prefill 폐지.</p>
+      <span class="pe-cell-tag">Opus 5.5 · Sonnet 5.5 · Haiku 5.5 · Fable 5.1</span>
     </a>
     <a class="pe-cell" href="./templates/작업지시.html">
       <span class="pe-cell-no" aria-hidden="true">T</span>

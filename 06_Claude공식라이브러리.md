@@ -5,7 +5,7 @@
 개별 프롬프트는 로그인형 [Anthropic Console](https://console.anthropic.com)의 공유 프롬프트 라이브러리로 이동했습니다.
 
 그래서 아래는 **무엇이 있었는지 알 수 있는 제목+설명 색인**으로만 유지합니다(깨진 링크 제거). 
-**바로 복붙해 쓸 프롬프트가 필요하면** → [04 갤러리 100선](/04_프롬프트갤러리) · [05 한글 실무 24선](/05_한글프롬프트) · [07 메타 프롬프트](/07_메타프롬프트) 를 쓰세요.
+**바로 복붙해 쓸 프롬프트가 필요하면** → [04 갤러리 105선](/04_프롬프트갤러리) · [05 한글 실무 24선](/05_한글프롬프트) · [07 메타 프롬프트](/07_메타프롬프트) 를 쓰세요.
 
 - 살아있는 공식 자료: [프롬프트 베스트 프랙티스](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) · [Console](https://console.anthropic.com)
 
