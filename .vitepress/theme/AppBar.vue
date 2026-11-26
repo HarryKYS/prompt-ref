@@ -27,7 +27,9 @@ const links = [
 ]
 
 // 서버 상태 점 — no-cors 핑으로 up/down 만 판별(루트 sync-appbar.py DOT_SCRIPT 와 동일 로직).
+// 로컬 허브(file://)에서만 돈다 — 공개 사이트 방문자 브라우저가 localhost 를 핑하면 콘솔 에러만 남는다.
 onMounted(() => {
+  if (location.protocol !== 'file:') return
   const poll = () => {
     document.querySelectorAll<HTMLElement>('.ab-dot[data-ping]').forEach((dot) => {
       const url = dot.getAttribute('data-ping')!
