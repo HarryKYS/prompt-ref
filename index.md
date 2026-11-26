@@ -42,7 +42,7 @@ aside: false
       <span class="pe-cell-no" aria-hidden="true">03</span>
       <h2>최신 모델 주의점</h2>
       <p>5.5 세대의 thinking 기본 ON 함정(content[0]·max_tokens), 강제 tool_choice·budget_tokens·temperature 제거, prefill 폐지.</p>
-      <span class="pe-cell-tag">Opus 5.5 · Sonnet 5.5 · Haiku 5.5 · Fable 5.1</span>
+      <span class="pe-cell-tag">Opus 5.5 · Sonnet 5.5 · Haiku 5.5 · Fable 5.2</span>
     </a>
     <a class="pe-cell" href="./templates/작업지시.html">
       <span class="pe-cell-no" aria-hidden="true">T</span>
